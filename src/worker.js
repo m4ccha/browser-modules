@@ -5,7 +5,7 @@ function postForeground(func) {
     throw new Error("only functions can be posted to foreground thread ("+
       typeof func +" given)");
   }
-  var args = Array.prototype.concat.apply([], [arguments]);
+  var args = Array.apply(null, arguments);
   args.shift();
   postMessage({ func: func.toString(), args: args, });
 }

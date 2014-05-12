@@ -13,6 +13,8 @@ describe("browser-modules", function() {
     beforeEach(function() {
       app = modularApp.create("test");
       expect(app).not.toBeNull();
+
+      global.fixture = {};
     });
 
     it("should be able to post empty function to bg", function() {
@@ -25,21 +27,29 @@ describe("browser-modules", function() {
     });
 
     describe("when in bg code", function() {
-      it("should be able to post empty function back to fg", function() {
-        app.postBackground(function() { postForeground(function() {}); });
-      });
-      it("should be able to post 3 empty functions back to fg", function() {
+      it("should be able to post empty function back to fg", function(done) {
+        global.fixture.done = done;
         app.postBackground(function() {
-          postForeground(function() {});
-          postForeground(function() {});
-          postForeground(function() {});
+          postForeground(function() { global.fixture.done() });
         });
       });
-      it("should be able to post a string back to fg", function() {
+      it("should be able to post 3 empty functions back to fg", function(done) {
+        var count = 0;
+        global.fixture.tick = function() { if (++count === 3) done(); };
         app.postBackground(function() {
-          postForeground(function(arg) { global.fromFg = arg; }, "posted");
+          postForeground(function() { global.fixture.tick(); });
+          postForeground(function() { global.fixture.tick(); });
+          postForeground(function() { global.fixture.tick(); });
         });
-        expect(global.fromFg).toBe("posted");
+      });
+      it("should be able to post a string back to fg", function(done) {
+        global.fixture.done = function(arg) {
+          expect(arg).toBe("test");
+          done();
+        };
+        app.postBackground(function() {
+          postForeground(function(arg) { global.fixture.done(arg); }, "test");
+        });
       });
     });
   });
