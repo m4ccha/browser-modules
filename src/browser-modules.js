@@ -22,7 +22,7 @@ function createApplication(name) {
       throw new Error("only functions can be posted to background thread ("+
         typeof func +" given)");
     }
-    var args = Array.apply(null, [arguments]);
+    var args = Array.apply(null, arguments);
     args.shift();
     worker.postMessage({ func: func.toString(), args: args });
   }

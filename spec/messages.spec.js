@@ -8,6 +8,15 @@ describe("browser-modules", function() {
     expect(app).not.toBeNull();
   });
 
+  function typeName(obj) {
+    var type = typeof obj;
+    if (type === "object") {
+      if (obj === null) return "null";
+      if (obj instanceof Array) return "array";
+    }
+    return type;
+  }
+
   describe("after creating application", function() {
     var app;
     beforeEach(function() {
@@ -17,6 +26,13 @@ describe("browser-modules", function() {
       global.fixture = {};
     });
 
+    var params = [{}, [], "", 0, true, null, undefined];
+    params.forEach(function(testParam) {
+      var testName = "shouldn't be able use %s as posted function";
+      it(testName.replace("%s", typeName(testParam)), function() {
+        expect(function() { app.postBackground(testParam); }).toThrow();
+      });
+    });
     it("should be able to post empty function to bg", function() {
       app.postBackground(function() {});
     });
@@ -25,13 +41,11 @@ describe("browser-modules", function() {
       app.postBackground(function() {});
       app.postBackground(function() {});
     });
-    it("shouldn't be able to post not invokable objects to bg", function() {
-      expect(function() { app.postBackground({}); }).toThrow();
-      expect(function() { app.postBackground([]); }).toThrow();
-      expect(function() { app.postBackground(""); }).toThrow();
-      expect(function() { app.postBackground(0); }).toThrow();
-      expect(function() { app.postBackground(true); }).toThrow();
-      expect(function() { app.postBackground(undefined); }).toThrow();
+    params.forEach(function(testParam) {
+      var testName = "should be able post %s as function argument";
+      it(testName.replace("%s", typeName(testParam)), function() {
+        app.postBackground(function() {}, testParam);
+      });
     });
 
     describe("when in bg code", function() {
@@ -40,7 +54,7 @@ describe("browser-modules", function() {
         app.postBackground(function() {
           postForeground(function() { global.fixture.done() });
         });
-      });
+      }, 500);
       it("should be able to post 3 empty functions back to fg", function(done) {
         var count = 0;
         global.fixture.tick = function() { if (++count === 3) done(); };
@@ -49,58 +63,28 @@ describe("browser-modules", function() {
           postForeground(function() { global.fixture.tick(); });
           postForeground(function() { global.fixture.tick(); });
         });
+      }, 500);
+      params.forEach(function(testParam) {
+        var testName = "should be able to post fn with %s argument back to fg";
+        it(testName.replace("%s", typeName(testParam)), function(done) {
+          global.fixture.done = function(arg) {
+            expect(arg).toEqual(testParam);
+            done();
+          };
+          app.postBackground(function(arg) {
+            postForeground(function(arg) { global.fixture.done(arg); }, arg);
+          }, testParam);
+        }, 500);
       });
-      it("should be able to post f with string arg back to fg", function(done) {
-        global.fixture.done = function(arg) {
-          expect(arg).toBe("test");
-          done();
-        };
-        app.postBackground(function() {
-          postForeground(function(arg) { global.fixture.done(arg); }, "test");
-        });
-      });
-      it("should be able to post f with int arg back to fg", function(done) {
-        global.fixture.done = function(arg) {
-          expect(arg).toBe(0xBaadF00D);
-          done();
-        };
-        app.postBackground(function() {
-          postForeground(
-            function(arg) { global.fixture.done(arg); },
-            0xBaadF00D
-            );
-        });
-      });
-      it("should be able to post f with array arg back to fg", function(done) {
-        global.fixture.done = function(arg) {
-          expect(arg).toEqual([0, 1, 2, 4, 8]);
-          done();
-        };
-        app.postBackground(function() {
-          postForeground(
-            function(arg) { global.fixture.done(arg); },
-            [0, 1, 2, 4, 8]
-            );
-        });
-      });
-      it("should be able to post f with object arg back to fg", function(done) {
-        global.fixture.done = function(arg) {
-          expect(arg).toEqual({});
-          done();
-        };
-        app.postBackground(function() {
-          postForeground(function(arg) { global.fixture.done(arg); }, {});
-        });
-      });
-      it("should be able to post f with 2 args", function(done) {
-        global.fixture.done = function(arg0, arg1) {
-          expect(arg0).toBe(0);
-          expect(arg1).toBe(1);
-          done();
-        };
-        app.postBackground(function() {
-          postForeground(function(a0,a1) { global.fixture.done(a0,a1); }, 0,1);
-        });
+      params.forEach(function(testParam) {
+        var testName = "shouldn't be able use %s as posted function";
+        it(testName.replace("%s", typeName(testParam)), function(done) {
+          global.fixture.done = done;
+          app.postBackground(function(arg) {
+            try { app.postForeground(arg); } catch(e) {}
+            postForeground(function() { global.fixture.done(); });
+          }, testParam);
+        }, 500);
       });
     });
   });
