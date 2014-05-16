@@ -61,6 +61,48 @@ describe("browser-modules", function() {
         it("module."+ testParam[1] +" should be the same as "+ testParam[1],
           expectBgVariablesEqual("module."+ testParam[1], testParam[1]));
       });
+
+      describe("inside a module", function() {
+        function expectModuleScopeContain(expectedType, variableName) {
+          return function(done) {
+            global.fixture.done = function(arg) {
+              expect(arg).toBe(expectedType);
+              done();
+            };
+            app.postBackground(function(name) {
+              var check = require("../spec/modules/checktype").check;
+              var type = check(name);
+              postForeground(function(arg) { global.fixture.done(arg); }, type);
+            }, variableName);
+          };
+        }
+        function expectModuleVariablesEqual(variableName0, variableName1) {
+          return function(done) {
+            global.fixture.done = function(arg) {
+              expect(arg).toBe(true);
+              done();
+            };
+            app.postBackground(function(name0, name1) {
+              var check = require("../spec/modules/checkequal").check;
+              var eq = check(name0, name1);
+              postForeground(function(arg) { global.fixture.done(arg); }, eq);
+            }, variableName0, variableName1);
+          };
+        }
+
+        params.forEach(function(testParam) {
+          it("should have "+ testParam[1] +" "+ testParam[0] +" available",
+            expectModuleScopeContain(testParam[0], testParam[1]));
+        });
+        params.forEach(function(testParam) {
+          it("should have module."+testParam[1]+" "+testParam[0]+" available",
+            expectModuleScopeContain(testParam[0], "module."+ testParam[1]));
+        });
+        params.forEach(function(testParam) {
+          it("module."+ testParam[1] +" should be the same as "+ testParam[1],
+            expectModuleVariablesEqual("module."+ testParam[1], testParam[1]));
+        });
+      });
     });
   });
 });

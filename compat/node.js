@@ -18,7 +18,21 @@ global.Worker = function(scriptAddress, name) {
   context.importScripts = function(address) {
     eval.apply(context, [fs.readFileSync(address).toString()]);
   }
+  context.location = { href: scriptAddress };
   context.console = console;
+  context.XMLHttpRequest = function() {
+    var xhr = {};
+    var address;
+
+    xhr.open = function(method, url, async) {
+      address = "."+ url.substring(url.indexOf("/spec"));
+    };
+    xhr.send = function() {
+      xhr.status = 200;
+      xhr.responseText = fs.readFileSync(address).toString();
+    };
+    return xhr;
+  }
 
   vm.runInNewContext(fs.readFileSync(scriptAddress).toString(), context);
 
