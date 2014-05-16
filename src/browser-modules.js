@@ -6,6 +6,7 @@ var workerScriptLocation = getWorkerScriptLocation();
 
 function createApplication(name) {
   var postBackground;
+  var terminate;
   var app;
 
   function onForegroundMessage(code, args) {
@@ -29,10 +30,14 @@ function createApplication(name) {
   worker.onmessage = function(evt) {
     onForegroundMessage(evt.data.func, evt.data.args);
   };
+  terminate = function() {
+    worker.terminate();
+  };
   
   return app = {
     name: name,
-    postBackground: postBackground
+    postBackground: postBackground,
+    terminate: terminate
   };
 }
 

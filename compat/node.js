@@ -30,6 +30,7 @@ global.Worker = function(scriptAddress, name) {
     queue.push(catchExceptions(function(){ context.onmessage({ data:msg });}));
   };
   worker.onmessage = function() {};
+  worker.terminate = function() {};
   return worker;
 }
 

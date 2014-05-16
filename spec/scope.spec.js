@@ -9,6 +9,9 @@ describe("browser-modules", function() {
       app = modularApp.create("test");
       expect(app).not.toBeNull();
     });
+    afterEach(function() {
+      app.terminate();
+    });
 
     describe("when in bg code", function() {
       it("shouldn't be able to use closure in code posted to bg", function() {

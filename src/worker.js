@@ -15,6 +15,12 @@ function createModule(id) {
 
   var module = {};
   function runInContext(code, args) {
+    // making some variables invisible
+    var postMessage = undefined; 
+    var createModule = undefined;
+    var global = module;
+    var self = module;
+
     eval("("+ code.toString() +").apply(module, args);");
   }
 
@@ -37,26 +43,10 @@ function createModule(id) {
   });
   Object.seal(module);
 
-  // making some variables invisible
-  var postMessage = undefined; 
-  var createModule = undefined;
-  var global = module;
-  var self = module;
-
   return module;
 }
 
 (function() {
-
-var mainModule = createModule("main");
-mainModule.config = {
-  moduleBaseUrl: "modules/",
-}
-
-function resolve(moduleId) {
-  // dots and double dots should work out-of-the-box
-  return mainModule.config.moduleBaseUrl + moduleId +".js"; 
-}
 
 var modules = {};
 
@@ -68,6 +58,16 @@ require = function(moduleId) {
     module.runInContext(function(url) { importScripts(url) }, [url]);
   }
   return module.exports;
+}
+
+var mainModule = createModule("main");
+mainModule.config = {
+  moduleBaseUrl: "modules/",
+}
+
+function resolve(moduleId) {
+  // dots and double dots should work out-of-the-box
+  return mainModule.config.moduleBaseUrl + moduleId +".js"; 
 }
 
 function checkModuleId(moduleId) {

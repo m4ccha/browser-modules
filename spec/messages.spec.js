@@ -25,6 +25,9 @@ describe("browser-modules", function() {
 
       global.fixture = {};
     });
+    afterEach(function() {
+      app.terminate();
+    });
 
     var params = [{}, [], "", 0, true, null, undefined];
     params.forEach(function(testParam) {
