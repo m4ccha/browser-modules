@@ -50,15 +50,15 @@ describe("browser-modules", function() {
 
     describe("when in bg code", function() {
       params.forEach(function(testParam) {
-        it("should have "+ testParam[1] +" "+ testParam[0] +" available",
+        it("should have '"+ testParam[1] +"' "+ testParam[0] +" available",
           expectBgScopeContain(testParam[0], testParam[1]));
       });
       params.forEach(function(testParam) {
-        it("should have module."+ testParam[1] +" "+ testParam[0] +" available",
+        it("should have 'module."+testParam[1]+"' "+testParam[0]+" available",
           expectBgScopeContain(testParam[0], "module."+ testParam[1]));
       });
       params.forEach(function(testParam) {
-        it("module."+ testParam[1] +" should be the same as "+ testParam[1],
+        it("'module."+testParam[1]+"' should be the same as '"+testParam[1]+"'",
           expectBgVariablesEqual("module."+ testParam[1], testParam[1]));
       });
 
@@ -91,15 +91,15 @@ describe("browser-modules", function() {
         }
 
         params.forEach(function(testParam) {
-          it("should have "+ testParam[1] +" "+ testParam[0] +" available",
+          it("should have '"+ testParam[1] +"' "+ testParam[0] +" available",
             expectModuleScopeContain(testParam[0], testParam[1]));
         });
         params.forEach(function(testParam) {
-          it("should have module."+testParam[1]+" "+testParam[0]+" available",
+          it("should have 'module."+testParam[1]+"' "+testParam[0]+" available",
             expectModuleScopeContain(testParam[0], "module."+ testParam[1]));
         });
         params.forEach(function(testParam) {
-          it("module."+ testParam[1] +" should be the same as "+ testParam[1],
+          it("'module."+testParam[1]+"' should be same as '"+testParam[1]+"'",
             expectModuleVariablesEqual("module."+ testParam[1], testParam[1]));
         });
       });
