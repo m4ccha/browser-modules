@@ -3,20 +3,6 @@
 var modularApp = require("../compat/node");
 
 describe("browser-modules", function() {
-  it("should be able to create application", function() {
-    var app = modularApp.create("test");
-    expect(app).not.toBeNull();
-  });
-
-  function typeName(obj) {
-    var type = typeof obj;
-    if (type === "object") {
-      if (obj === null) return "null";
-      if (obj instanceof Array) return "array";
-    }
-    return type;
-  }
-
   describe("after creating application", function() {
     var app;
     beforeEach(function() {
@@ -28,6 +14,15 @@ describe("browser-modules", function() {
     afterEach(function() {
       app.terminate();
     });
+
+    function typeName(obj) {
+      var type = typeof obj;
+      if (type === "object") {
+        if (obj === null) return "null";
+        if (obj instanceof Array) return "array";
+      }
+      return type;
+    }
 
     var params = [{}, [], "", 0, true, null, undefined];
     params.forEach(function(testParam) {

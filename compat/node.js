@@ -52,9 +52,11 @@ global.window = global;
 global.bmWorkerScriptLocation = "./src/worker.js";
 
 eval.apply(global, [fs.readFileSync("./src/browser-modules.js").toString()]);
+module.exports = modularApp;
 
+var originalCreate = modularApp.create;
 module.exports.create = function(name) {
-  var app = modularApp.create(name);
+  var app = originalCreate(name);
 
   var originalPost = app.postBackground;
   app.postBackground = function() {
