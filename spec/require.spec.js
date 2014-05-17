@@ -38,6 +38,10 @@ describe("browser-modules", function() {
         expectResultOfEvalInsideAModule("object", function() {
           return typeof require("../spec/modules/checktype");
         }));
+      it("is able to use only part of other modules exports",
+        expectResultOfEvalInsideAModule("function", function() {
+          return typeof require("../spec/modules/checkequal").check;
+        }));
     });
   });
 });
