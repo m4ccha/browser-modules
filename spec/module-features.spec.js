@@ -34,6 +34,10 @@ describe("browser-modules", function() {
         expectResultOfEvalInsideAModule("function", function() {
           return typeof require("../spec/modules/eval");
         }));
+      it("is able to require module with exports of type object",
+        expectResultOfEvalInsideAModule("object", function() {
+          return typeof require("../spec/modules/checktype");
+        }));
     });
   });
 });
