@@ -1,6 +1,6 @@
 'use strict';
 
 exports = function(code) {
-  eval(code);
+  return eval(code);
 };
 
