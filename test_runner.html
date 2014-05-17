@@ -11,6 +11,13 @@
 
   <script type="text/javascript" src="src/browser-modules.js"></script>
   <script type="text/javascript" src="compat/browser.js"></script>
+  <script type="text/javascript" src="compat/samethreadworker.js"></script>
+  <script type="text/javascript">
+    if (location.search.indexOf("singleThread=true") != -1) {
+      global.Worker = SameThreadWorker;
+    }
+  </script>
+
   <script type="text/javascript" src="spec/app.spec.js"></script>
   <script type="text/javascript" src="spec/messages.spec.js"></script>
   <script type="text/javascript" src="spec/scope.spec.js"></script>

@@ -8,12 +8,19 @@ global.Worker = function(scriptAddress, name) {
   var name = name || "worker";
   var worker = global.Worker.instance = {};
   var queue = worker.messageQueue = [];
+  
+  function process() {
+    while (queue.length) {
+      queue.shift()();
+    }
+  }
 
   var context = {};
   context.self = context;
   context.onmessage = function() {};
   context.postMessage = function(message) {
     queue.push(function() { worker.onmessage({ data: message }); });
+    process();
   }
   context.importScripts = function(address) {
     eval.apply(context, [fs.readFileSync(address).toString()]);
@@ -42,9 +49,11 @@ global.Worker = function(scriptAddress, name) {
   };
   worker.postMessage = function(msg) {
     queue.push(catchExceptions(function(){ context.onmessage({ data:msg });}));
+    process();
   };
   worker.onmessage = function() {};
   worker.terminate = function() {};
+  worker.start = process();
   return worker;
 }
 
@@ -53,20 +62,4 @@ global.bmWorkerScriptLocation = "./src/worker.js";
 
 eval.apply(global, [fs.readFileSync("./src/browser-modules.js").toString()]);
 module.exports = modularApp;
-
-var originalCreate = modularApp.create;
-module.exports.create = function(name) {
-  var app = originalCreate(name);
-
-  var originalPost = app.postBackground;
-  app.postBackground = function() {
-    originalPost.apply(app, arguments);
-
-    var queue = Worker.instance.messageQueue;
-    while (queue.length) {
-      queue.shift()();
-    }
-  };
-  return app;
-};
 
