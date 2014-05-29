@@ -26,10 +26,11 @@ describe("browser-modules", function() {
         "self", "null", "location", "eval", "Object", "Array", "Error",
         "XMLHttpRequest", "toString", "module", "id", "exports", "require",
         "importScripts", "postForeground", "Function", "global", "args",
-        "context", "url",
+        "context", "url", "name"
       ];
 
-    var code = fs.readFileSync("src/worker.js").toString();
+      var code = fs.readFileSync("src/browser-modules.js").toString() +
+          fs.readFileSync("src/worker.js").toString();
       var tokens = code.split(/[\s.,{}\[\]()"';:+\-*\/=<>!~?|\\]/);
       tokens = tokens.filter(function(word) {
         return reserved.indexOf(word) === -1 && !word.match("^[0-9.]*$");
