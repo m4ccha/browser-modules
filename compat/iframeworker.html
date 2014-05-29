@@ -34,7 +34,7 @@ var postMessage;
 
   var intervalId = setInterval(function() {
     var input = channel.input();
-    while (input.length) { "
+    while (input.length) {
       var message = input.shift();
       if (message === "terminate") {
         clearInterval(intervalId);
