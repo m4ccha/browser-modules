@@ -1,0 +1,64 @@
+<body>
+</body>
+
+<script type="text/javascript">
+
+function importScripts() {
+  Array.apply(null, arguments).forEach(function(url) {
+    eval((function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, false);
+      xhr.send();
+      if (xhr.status !== 200) {
+        throw Error(xhr.status + " " + xhr.statusText + ": " + url);
+      }
+      var code = xhr.responseText;
+      return code;
+    })());
+  });
+}
+
+var onmessage = function() {}
+var postMessage;
+
+(function() {
+  var id = location.search.substring(location.search.indexOf("id=") + 3);
+  var channel = parent.IFrameWorker.get(id);
+
+  postMessage = function(message) {
+    channel.output({ data: message });
+  };
+
+  var doc = document;
+  var clearIterval = window.clearInterval;
+
+  var intervalId = setInterval(function() {
+    var input = channel.input();
+    while (input.length) { "
+      var message = input.shift();
+      if (message === "terminate") {
+        clearInterval(intervalId);
+        return;
+      }
+
+      var evt = new CustomEvent("message", { detail: message });
+      doc.dispatchEvent(evt);
+    }
+  }, 100);
+
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.src = channel.src;
+  document.body.appendChild(script);
+})();
+
+document.addEventListener("message", function(evt) {
+  onmessage(evt.detail);
+});
+
+Object.defineProperty(window, "parent", {
+  enumerable: false, configurable: false, value: undefined,
+});
+
+</script>
+
