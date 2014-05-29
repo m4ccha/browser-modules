@@ -1,6 +1,6 @@
 'use strict';
 
 exports.check = function(name) {
-  return typeof eval(name);
+  return eval("typeof "+ name +";");
 };
 

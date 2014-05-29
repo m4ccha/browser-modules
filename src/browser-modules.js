@@ -1,23 +1,48 @@
 
 var modularApp = (function() {
 
-var global = window;
-var workerScriptLocation = getWorkerScriptLocation();
+var scriptRoot = "/";
 
-function createApplication(name) {
+if (document.currentScript) {
+  scriptRoot = document.currentScript.src.replace(/browser-modules\.js.*/, "");
+} else if (document.scripts) {
+  for (var i = 0; i < document.scripts.length; ++i) {
+    var src = document.scripts[i].src;
+    if (src.indexOf("browser-modules.js") != -1) {
+      scriptRoot = src.replace(/browser-modules\.js.*/, "");
+    }
+  }
+}
+
+var defaultConfig = {
+  workerScript: scriptRoot +"worker.js",
+  moduleBase: scriptRoot
+}
+
+var global = window;
+
+function createApplication(name, config) {
   var postBackground;
   var terminate;
   var app;
 
   function onForegroundMessage(code, args) {
     // making some variables invisible
-    var workerScripLocation = undefined;
+    var config = undefined;
     var onForegroundMessage = undefined;
 
     eval("("+ code.toString() +").apply(app, args);");
   }
 
-  var worker = new Worker(workerScriptLocation);
+  var config = config || {};
+  for (var key in defaultConfig) {
+    if (typeof config[key] === "undefined") {
+      config[key] = defaultConfig[key];
+    }
+  }
+  var worker = new Worker(config.workerScript);
+  worker.postMessage(config);
+
   postBackground = function(func) {
     if (typeof func != "function") {
       throw new Error("only functions can be posted to background thread ("+
@@ -39,24 +64,6 @@ function createApplication(name) {
     postBackground: postBackground,
     terminate: terminate
   };
-}
-
-function getWorkerScriptLocation() {
-  if (global.bmWorkerScriptLocation) {
-    return global.bmWorkerScriptLocation;
-  }
-  if (document.currentScript) {
-    return document.currentScript.src.replace("browser-modules", "worker");
-  }
-  if (document.scripts) {
-    for (var i = 0; i < document.scripts.length; ++i) {
-      var src = document.scripts[i].src;
-      if (src.indexOf("browser-modules.js") != -1) {
-        return src.replace("browser-modules", "worker");
-      }
-    }
-  }
-  throw new Error("can't get address of currently running script");
 }
 
 var api = {};

@@ -1,4 +1,77 @@
-var require;
+(function() {
+
+var RO_ATTRS = ["id", "postForeground", "require"];
+var RW_ATTRS = ["exports"];
+
+var modules = {};
+
+function createModule(id) {
+  var contextIn = "";
+  var contextOut = "";
+
+  function defineReadOnly(key, value) {
+    return "Object.defineProperty(module, \""+ key +"\", {\n"+
+    "  configurable:false, enumerable:true, settable:false, value:"+value+",\n"+
+    "});\n";
+  }
+  function defineReadWrite(key, get, set) {
+    return "Object.defineProperty(module, \""+ key +"\", {\n"+
+    "  configurable:false, enumerable:true, get:"+get+", set:"+set+",\n"+
+    "});";
+  }
+
+  RO_ATTRS.concat(RW_ATTRS).forEach(function(key) {
+    contextIn += "var "+ key +" = context[\""+ key +"\"];\n";
+    contextOut += "context[\""+ key +"\"] = "+ key +";\n";
+  });
+  contextIn += "var module = {};\n";
+  contextIn += defineReadOnly("module", "module");
+  RO_ATTRS.forEach(function(key) {
+    contextIn += defineReadOnly(key, key);
+  });
+  RW_ATTRS.forEach(function(key) {
+    contextIn += defineReadWrite(key,
+        "function() { return "+ key +"; }",
+        "function(arg) { "+ key +" = arg; }"
+        );
+  });
+  contextIn += defineReadOnly("importScripts", "importScripts");
+  contextIn += "Object.freeze(module);\n"
+  contextIn += importScripts.toString() +"\n";
+  contextIn += "var onmessage = undefined;\n";
+  contextIn += "var postMessage = undefined;\n";
+
+  var context = {};
+  context.id = id;
+  context.postForeground = postForeground;
+  context.require = require;
+  context.exports = {};
+  var global = {};
+
+  function runInSandbox(code, args) {
+    var body = contextIn +"\n"+
+      "("+ code.toString() +").apply(global, args);\n"+
+      contextOut;
+    var sandbox = Function("global", "context", "args", body);
+    sandbox.call(null, global, context, args);
+  }
+  Object.defineProperty(runInSandbox, "exports", {
+    set: throwReadOnly,
+    get: function() { return context.exports; },
+  });
+  return runInSandbox;
+}
+
+function require(moduleId) {
+  var module = modules[checkModuleId(moduleId)];
+  if (!module) {
+    modules[moduleId] = module = createModule(moduleId);
+    Object.seal(module);
+    var url = resolve(moduleId);
+    module(function(url) { importScripts(url) }, [url]);
+  }
+  return module.exports;
+}
 
 function postForeground(func) {
   if (typeof func != "function") {
@@ -10,14 +83,13 @@ function postForeground(func) {
   postMessage({ func: func.toString(), args: args, });
 }
 
-function createModule(id) {
-  'use strict';
+function throwReadOnly() {
+  throw new Error("setting attribute is not allowed");
+}
 
-  var module = {};
-  var exports = {};
-
-  function importScripts() {
-    Array.apply(null, arguments).forEach(function(url) {
+function importScripts() {
+  Array.apply(null, arguments).forEach(function(url) {
+    eval((function() {
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, false);
       xhr.send();
@@ -25,67 +97,9 @@ function createModule(id) {
         throw Error(xhr.status + " " + xhr.statusText + ": " + url);
       }
       var code = xhr.responseText;
-      eval(code);
-    });
-  }
-  function runInContext(code, args) {
-    // making some variables invisible
-    var postMessage = undefined; 
-    var createModule = undefined;
-    var runInContext = undefined;
-    var global = module;
-    var self = module;
-
-    eval("("+ code.toString() +").apply(module, args);");
-  }
-
-  function defineReadOnly(key, value) {
-    Object.defineProperty(module, key, {
-      configurable: false, enumerable: true, writable: false, value: value,
-    });
-  }
-  defineReadOnly("module", module);
-  defineReadOnly("id", id);
-  defineReadOnly("postForeground", postForeground);
-  defineReadOnly("importScripts", importScripts);
-  defineReadOnly("require", require);
-  defineReadOnly("runInContext", runInContext);
-
-  Object.defineProperty(module, "exports", {
-    get: function() { return exports; },
-    set: function(arg) { exports = arg; },
+      return code;
+    })());
   });
-
-  return module;
-}
-
-(function() {
-
-var modules = {};
-
-require = function(moduleId) {
-  var module = modules[checkModuleId(moduleId)];
-  if (!module) {
-    modules[moduleId] = module = createModule(moduleId);
-    Object.seal(module);
-    var url = resolve(moduleId);
-    module.runInContext(function(url) { importScripts(url) }, [url]);
-  }
-  return module.exports;
-}
-
-function removeFilePart(url) {
-  var end = url.lastIndexOf("/");
-  return url.substring(0, end == -1? url.length(): end + 1);
-}
-
-var mainModule = createModule("main");
-mainModule.config = { moduleBaseUrl: removeFilePart(location.href), }
-Object.seal(mainModule);
-
-function resolve(moduleId) {
-  // dots and double dots should work out-of-the-box
-  return mainModule.config.moduleBaseUrl + moduleId +".js"; 
 }
 
 function checkModuleId(moduleId) {
@@ -105,8 +119,24 @@ function checkModuleId(moduleId) {
   return moduleId;
 }
 
+var config;
+
+function resolve(moduleId) {
+  // dots and double dots should work out-of-the-box
+  return config.moduleBase + moduleId +".js"; 
+}
+
+var handleMessage = function(message) {
+  config = message;
+
+  var mainModule = createModule("main");
+  handleMessage = function(message) {
+    mainModule(message.func, message.args);
+  };
+};
+
 onmessage = function(evt) {
-  mainModule.runInContext(evt.data.func, evt.data.args);
+  handleMessage(evt.data);
 };
 
 })();

@@ -21,7 +21,10 @@ describe("browser-modules", function() {
   describe("when calling run", function() {
     var app;
     afterEach(function() {
-      app.terminate();
+      if (app) {
+        app.terminate();
+        app = null;
+      }
     });
 
     it("should be able to create application", function() {
@@ -31,10 +34,13 @@ describe("browser-modules", function() {
     it("should be able to create 3 applications", function() {
       var app0 = modularApp.run(function() {});
       expect(app0).not.toBeNull();
+      app0.terminate();
       var app1 = modularApp.run(function() {});
       expect(app1).not.toBeNull();
+      app1.terminate();
       var app2 = modularApp.run(function() {});
       expect(app2).not.toBeNull();
+      app2.terminate();
     });
     params.forEach(function(testParam) {
       var testName = "shouldn't be able use %s as main app function";

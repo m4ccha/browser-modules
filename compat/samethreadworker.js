@@ -48,7 +48,7 @@ function SameThreadWorker(scriptAddress, name) {
     return function() { try { func(); } catch(e) { logError(e); } };
   };
   worker.postMessage = function(msg) {
-    queue.push(catchExceptions(function() { onmessage({ data:msg }); }));
+    queue.push(function() { onmessage({ data:msg }); });
     process();
   };
 

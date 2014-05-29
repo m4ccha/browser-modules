@@ -21,10 +21,10 @@ global.Worker = function(scriptAddress, name) {
   context.postMessage = function(message) {
     queue.push(function() { worker.onmessage({ data: message }); });
     process();
-  }
+  };
   context.importScripts = function(address) {
     eval.apply(context, [fs.readFileSync(address).toString()]);
-  }
+  };
   context.location = { href: scriptAddress };
   context.console = console;
   context.XMLHttpRequest = function() {
@@ -39,7 +39,7 @@ global.Worker = function(scriptAddress, name) {
       xhr.responseText = fs.readFileSync(address).toString();
     };
     return xhr;
-  }
+  };
 
   vm.runInNewContext(fs.readFileSync(scriptAddress).toString(), context);
 
@@ -53,12 +53,12 @@ global.Worker = function(scriptAddress, name) {
   };
   worker.onmessage = function() {};
   worker.terminate = function() {};
-  worker.start = process();
+  worker.start = process;
   return worker;
 }
 
 global.window = global;
-global.bmWorkerScriptLocation = "./src/worker.js";
+global.document = { currentScript: { src: "./src/browser-modules.js" } };
 
 eval.apply(global, [fs.readFileSync("./src/browser-modules.js").toString()]);
 module.exports = modularApp;
