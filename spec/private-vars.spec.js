@@ -26,7 +26,7 @@ describe("browser-modules", function() {
         "self", "null", "location", "eval", "Object", "Array", "Error",
         "XMLHttpRequest", "toString", "module", "id", "exports", "require",
         "importScripts", "postForeground", "Function", "global", "args",
-        "context", "url", "name"
+        "context", "url", "name", "Worker",
       ];
 
       var code = fs.readFileSync("src/browser-modules.js").toString() +
