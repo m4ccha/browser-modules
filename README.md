@@ -1,3 +1,10 @@
+> #### NOTE
+> 
+> This is silly... Use [Browserify][0] or [Webpack][1].
+
+[0]: https://github.com/substack/node-browserify
+[1]: https://github.com/webpack/webpack
+
 browser-modules
 ===============
 
