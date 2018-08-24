@@ -8,8 +8,8 @@
 browser-modules
 ===============
 
-Implementation of [http://wiki.commonjs.org/wiki/Modules/1.1](CommonJS
-Modules/1.1) standard-compliant module loader that runs in modern web browsers.
+Implementation of [CommonJS Modules/1.1](http://wiki.commonjs.org/wiki/Modules/1.1)
+standard-compliant module loader that runs in modern web browsers.
 
 Goal
 ----
